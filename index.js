@@ -16,9 +16,11 @@ app.use(bodyParser.urlencoded({
 }));
 
 function findNearest(req, res, next) {
-	var query = 'SELECT * from find_nearest($1, $2);';
+	var query = 'SELECT * from find_nearest($1, $2, $3);';
 
-	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon)], function (err, result) {
+	var inset = req.query.inset || 0.1;
+
+	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon), parseFloat(inset)], function (err, result) {
 		var rows = result.rows;
 
 		var uniqIds = _.uniq(_.pluck(rows, 'id'));
