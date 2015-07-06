@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 	extended: true
 }));
 
-function findNearest(req, res, next) {
+function findNearest(req, res) {
 	var query = 'SELECT * from find_nearest_waterways($1, $2, $3);';
 
 	var inset = req.query.inset || 0.1;
@@ -40,11 +40,11 @@ function findNearest(req, res, next) {
 			});
 
 			results[el.id].center = {
-				latitude: el.centerLat,
-				longitude: el.centerLon
+				latitude: el.centerlat,
+				longitude: el.centerlon
 			};
 
-			results[el.id].name = el['the_name'];
+			results[el.id].name = el.the_name;
 			results[el.id].id = el.id;
 		});
 
