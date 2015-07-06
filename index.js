@@ -39,6 +39,11 @@ function findNearest(req, res, next) {
 				longitude: el.longitude
 			});
 
+			results[el.id].center = {
+				latitude: el.centerLat,
+				longitude: el.centerLon
+			};
+
 			results[el.id].name = el['the_name'];
 			results[el.id].id = el.id;
 		});
