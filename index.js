@@ -21,43 +21,64 @@ function findNearest(req, res) {
 	var inset = req.query.inset || 0.1;
 
 	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon), parseFloat(inset)], function (err, result) {
-		var rows = result.rows;
 
-		var uniqIds = _.uniq(_.pluck(rows, 'id'));
-
-		var results = {};
-
-		_.each(uniqIds, function (val) {
-			results[val] = {
-				coordinates: []
-			};
-		});
-
-		_.each(rows, function (el) {
-			results[el.id].coordinates.push({
-				latitude: el.latitude,
-				longitude: el.longitude
-			});
-
-			results[el.id].center = {
-				latitude: el.centerlat,
-				longitude: el.centerlon
-			};
-
-			results[el.id].name = el.the_name;
-			results[el.id].id = el.id;
-		});
-
-		var resultsArray = _.map(uniqIds, function (val) {
-			return results[val];
-		});
+		var resultsArray = processResults(result);
 
 		res.status(200).send(resultsArray);
-
 	});
 }
 
+function findNearestWaters(req, res) {
+	var query = 'SELECT * from find_nearest_waters($1, $2, $3);';
+
+	var inset = req.query.inset || 0.1;
+
+	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon), parseFloat(inset)], function (err, result) {
+
+		var resultsArray = processResults(result);
+
+		res.status(200).send(resultsArray);
+	});
+}
+
+function processResults(result) {
+	var rows = result.rows;
+
+	var uniqIds = _.uniq(_.pluck(rows, 'id'));
+
+	var results = {};
+
+	_.each(uniqIds, function (val) {
+		results[val] = {
+			coordinates: []
+		};
+	});
+
+	_.each(rows, function (el) {
+		results[el.id].coordinates.push({
+			latitude: el.latitude,
+			longitude: el.longitude
+		});
+
+		results[el.id].center = {
+			latitude: el.centerlat,
+			longitude: el.centerlon
+		};
+
+		results[el.id].name = el.the_name;
+		results[el.id].id = el.id;
+	});
+
+	var resultsArray = _.map(uniqIds, function (val) {
+		return results[val];
+	});
+
+	return resultsArray;
+}
+
 app.get('/nearest', findNearest);
+
+app.get('/nearest/waters', findNearestWaters);
 
 pgClient.connect(function (err) {
 	if (err) {
