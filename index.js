@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 function findNearest(req, res, next) {
-	var query = 'SELECT * from find_nearest($1, $2, $3);';
+	var query = 'SELECT * from find_nearest_waterways($1, $2, $3);';
 
 	var inset = req.query.inset || 0.1;
 
