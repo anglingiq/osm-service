@@ -66,8 +66,8 @@ function processResults(result, isRiver) {
 
 	_.each(rows, function (el) {
 		results[el.id].coordinates.push({
-			latitude: el.latitude,
-			longitude: el.longitude
+			lat: el.latitude,
+			lon: el.longitude
 		});
 
 		if (isRiver) {
