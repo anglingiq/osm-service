@@ -30,7 +30,7 @@ function findNearestWaterways(opts, cb) {
 			return cb(err);
 		}
 
-		cb(null, processResults(result));
+		cb(null, processResults(result, true));
 	});
 }
 
@@ -47,7 +47,7 @@ function findNearestLakes(opts, cb) {
 			return cb(err);
 		}
 
-		cb(null, processResults(result));
+		cb(null, processResults(result, false));
 	});
 }
 
@@ -122,6 +122,9 @@ function nearestRoute(req, res) {
 
 			var waterways = rivers.concat(lakes).sort(function (x, y) {
 				return x.distance - y.distance;
+			}).map(function (x) {
+				x.id = parseInt(x.id);
+				return x;
 			});
 
 			res.status(200).send(waterways);
