@@ -93,9 +93,9 @@ function processResults(result, isRiver) {
 		results[el.id].id = el.id;
 	});
 
-	var resultsArray = _.map(uniqIds, function (val) {
+	var resultsArray = (_.map(uniqIds, function (val) {
 		return results[val];
-	}).filter(function (val) {
+	})).filter(function (val) {
 		return val.id !== null;
 	});
 
