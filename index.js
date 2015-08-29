@@ -4,6 +4,7 @@ var express = require('express');
 var pg = require('pg').native;
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var async = require('async');
 
 
 var conString = 'postgres://osm:osm@localhost/osm';
@@ -15,33 +16,42 @@ app.use(bodyParser.urlencoded({
 	extended: true
 }));
 
-function findNearest(req, res) {
+
+function findNearestWaterways(opts, cb) {
 	var query = 'SELECT * from find_nearest_waterways($1, $2, $3);';
 
-	var inset = req.query.inset || 0.1;
+	var inset = opts.inset || 0.1;
 
-	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon), parseFloat(inset)], function (err, result) {
+	inset = Math.min(inset, 0.6);
 
-		var resultsArray = processResults(result);
+	pgClient.query(query, [parseFloat(opts.lat), parseFloat(opts.lon), parseFloat(inset)], function (err, result) {
 
-		res.status(200).send(resultsArray);
+		if (err) {
+			return cb(err);
+		}
+
+		cb(null, processResults(result));
 	});
 }
 
-function findNearestWaters(req, res) {
-	var query = 'SELECT * from find_nearest_waters($1, $2, $3);';
+function findNearestLakes(opts, cb) {
+	var query = 'SELECT * from find_nearest_lakes($1, $2, $3);';
 
-	var inset = req.query.inset || 0.1;
+	var inset = opts.inset || 0.1;
 
-	pgClient.query(query, [parseFloat(req.query.lat), parseFloat(req.query.lon), parseFloat(inset)], function (err, result) {
+	inset = Math.min(inset, 0.6);
 
-		var resultsArray = processResults(result);
+	pgClient.query(query, [parseFloat(opts.lat), parseFloat(opts.lon), parseFloat(inset)], function (err, result) {
 
-		res.status(200).send(resultsArray);
+		if (err) {
+			return cb(err);
+		}
+
+		cb(null, processResults(result));
 	});
 }
 
-function processResults(result) {
+function processResults(result, isRiver) {
 	var rows = result.rows;
 
 	var uniqIds = _.uniq(_.pluck(rows, 'id'));
@@ -60,10 +70,11 @@ function processResults(result) {
 			longitude: el.longitude
 		});
 
-		results[el.id].center = {
-			latitude: el.centerlat,
-			longitude: el.centerlon
-		};
+		if (isRiver) {
+			results[el.id].type = 'river';
+		} else {
+			results[el.id].type = 'lake';
+		}
 
 		results[el.id].name = el.the_name;
 		results[el.id].id = el.id;
@@ -76,9 +87,53 @@ function processResults(result) {
 	return resultsArray;
 }
 
-app.get('/nearest', findNearest);
+function nearestWaterwaysRoute(req, res) {
+	findNearestWaterways(req.query, function (err, waterways) {
+		var status = err ? 500 : 200;
+		var data = err ? null : waterways;
 
-app.get('/nearest/waters', findNearestWaters);
+		res.status(status).send(data);
+	});
+}
+
+function nearestLakesRoute(req, res) {
+	findNearestLakes(req.query, function (err, lakes) {
+		var status = err ? 500 : 200;
+		var data = err ? null : lakes;
+
+		res.status(status).send(data);
+	});
+}
+
+function nearestRoute(req, res) {
+	async.parallel({
+		lakes: function (cb) {
+			findNearestLakes(req.query, cb);
+		},
+		rivers: function (cb) {
+			findNearestWaterways(req.query, cb);
+		}
+	}, function (err, results) {
+		if (err) {
+			return res.status(500).end();
+		} else {
+			var lakes = results.lakes;
+			var rivers = results.rivers;
+
+			var waterways = rivers.concat(lakes).sort(function (x, y) {
+				return x.distance - y.distance;
+			});
+
+			res.status(200).send(waterways);
+		}
+	});
+}
+
+app.get('/nearest/waterways', nearestWaterwaysRoute);
+
+app.get('/nearest/waters', nearestLakesRoute);
+
+app.get('/nearest', nearestRoute);
 
 pgClient.connect(function (err) {
 	if (err) {
