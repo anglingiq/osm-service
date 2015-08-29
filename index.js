@@ -67,11 +67,11 @@ function processResults(result, isRiver) {
 
 	_.each(rows, function (el) {
 
-		if (names.indexOf(el.name) !== -1) {
+		if (names.indexOf(el.the_name) !== -1) {
 			return;
 		}
 
-		names.push(el.name);
+		names.push(el.the_name);
 
 		results[el.id].coordinates.push({
 			lat: el.latitude,
