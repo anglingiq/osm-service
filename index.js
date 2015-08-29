@@ -56,7 +56,7 @@ function processResults(result, isRiver) {
 
 	var uniqIds = _.uniq(_.pluck(rows, 'id'));
 
-	var names = [];
+
 	var results = {};
 
 	_.each(uniqIds, function (val) {
@@ -65,13 +65,17 @@ function processResults(result, isRiver) {
 		};
 	});
 
+	var names = [];
+	var currentIds = [];
+
 	_.each(rows, function (el) {
 
-		if (names.indexOf(el.the_name) !== -1) {
+		if (results[el.id].name !== el.the_name && names.indexOf(el.the_name) !== -1) {
 			return;
 		}
 
 		names.push(el.the_name);
+		currentIds.push(el.id);
 
 		results[el.id].coordinates.push({
 			lat: el.latitude,
@@ -91,6 +95,8 @@ function processResults(result, isRiver) {
 
 	var resultsArray = _.map(uniqIds, function (val) {
 		return results[val];
+	}).filter(function (val) {
+		return val.id !== null;
 	});
 
 	return resultsArray;
