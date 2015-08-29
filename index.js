@@ -56,6 +56,7 @@ function processResults(result, isRiver) {
 
 	var uniqIds = _.uniq(_.pluck(rows, 'id'));
 
+	var names = [];
 	var results = {};
 
 	_.each(uniqIds, function (val) {
@@ -65,6 +66,13 @@ function processResults(result, isRiver) {
 	});
 
 	_.each(rows, function (el) {
+
+		if (names.indexOf(el.name) !== -1) {
+			return;
+		}
+
+		names.push(el.name);
+
 		results[el.id].coordinates.push({
 			lat: el.latitude,
 			lon: el.longitude
