@@ -76,6 +76,7 @@ function processResults(result, isRiver) {
 			results[el.id].type = 'lake';
 		}
 
+		results[el.id].distance = parseFloat(el.distance);
 		results[el.id].name = el.the_name;
 		results[el.id].id = el.id;
 	});
