@@ -93,12 +93,12 @@ function processResults(result, isRiver) {
 		results[el.id].id = el.id;
 	});
 
-	var resultsArray = _.map(uniqIds, function (val) {
-		return results[val];
+	var resultsArray = _.map(uniqIds, function (id) {
+		return results[id];
 	});
 
 	return resultsArray.filter(function (val) {
-		return val.id !== null;
+		return val.id !== undefined;
 	});
 }
 
